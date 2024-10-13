@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dot Dodger</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+            touch-action: none; /* Prevent default touch actions */
+        }
+        canvas {
+            border: 1px solid #000;
+            background: #fff;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const canvasSize = 400;
+let player = { x: 200, y: 200, size: 10, speed: 5 };
+let enemies = [];
+let score = 0;
+let gameOver = false;
+
+document.addEventListener('keydown', movePlayer);
+canvas.addEventListener('touchstart', handleTouchStart);
+canvas.addEventListener('touchmove', handleTouchMove);
+
+function movePlayer(e) {
+    if (e.key === 'ArrowUp' || e.key === 'w') player.y -= player.speed;
+    if (e.key === 'ArrowDown' || e.key === 's') player.y += player.speed;
+    if (e.key === 'ArrowLeft' || e.key === 'a') player.x -= player.speed;
+    if (e.key === 'ArrowRight' || e.key === 'd') player.x += player.speed;
+}
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchStart(e) {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}
+
+function handleTouchMove(e) {
+    const touch = e.touches[0];
+    const touchEndX = touch.clientX;
+    const touchEndY = touch.clientY;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    player.x += deltaX / 20; // Adjust the division factor to control sensitivity
+    player.y += deltaY / 20; // Adjust the division factor to control sensitivity
+
+    touchStartX = touchEndX;
+    touchStartY = touchEndY;
+}
+
+function update() {
+    if (gameOver) return;
+
+    score++;
+    scoreDisplay.innerText = `Score: ${score}`;
+    
+    if (Math.random() < 0.02) {
+        const size = 10 + Math.random() * 20;
+        const speed = 1 + Math.random() * 3;
+        enemies.push({
+            x: Math.random() * canvasSize,
+            y: -size,
+            size: size,
+            speed: speed
+        });
+    }
+
+    enemies.forEach(enemy => {
+        enemy.y += enemy.speed;
+        if (isCollision(player, enemy)) gameOver = true;
+    });
+
+    enemies = enemies.filter(enemy => enemy.y < canvasSize + enemy.size);
+
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    ctx.fillStyle = 'red';
+    enemies.forEach(enemy => {
+        ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+    });
+}
+
+function isCollision(rect1, rect2) {
+    return rect1.x < rect2.x + rect2.size &&
+           rect1.x + rect1.size > rect2.x &&
+           rect1.y < rect2.y + rect2.size &&
+           rect1.y + rect1.size > rect2.y;
+}
+
+update();
+
+    </script>
+</body>
+</html>
